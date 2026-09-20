@@ -1,0 +1,18 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+/run
+
+/origami-server/build.gradle.kts
+/origami-server/src/minecraft
+/paper-server
+/origami-api/build.gradle.kts
+/paper-api
+/paper-api-generator
+
+.idea/
+
+.DS_Store

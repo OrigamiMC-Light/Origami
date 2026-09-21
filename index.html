@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Origami — a folded, faster Paper fork</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ---------- Tokens: light (washi) is the base, dark (ink) overrides ---------- */
+  :root{
+    --bg:#f2f3f7;
+    --bg-2:#ffffff;
+    --ink:#191b2e;
+    --ink-soft:#565a74;
+    --line:#dcdfea;
+    --accent:#df4f1c;
+    --accent-ink:#ffffff;
+
+    --f1:#ffffff;   /* top / lightest fold */
+    --f2:#eef0f7;
+    --f3:#e0e4ef;
+    --f4:#cdd3e4;
+    --f5:#bcc3da;   /* deepest fold */
+    --fold:rgba(25,27,46,.14);
+    --crane-shadow:rgba(31,35,72,.22);
+
+    --maxw:1160px;
+    --pad:clamp(20px,5vw,64px);
+
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#13152a;
+      --bg-2:#191c34;
+      --ink:#ece6d8;
+      --ink-soft:#a4a6c2;
+      --line:#2a2e50;
+      --accent:#ee5a2b;
+      --accent-ink:#12142a;
+
+      --f1:#3b4069;
+      --f2:#31365b;
+      --f3:#282c4d;
+      --f4:#1f2340;
+      --f5:#191c37;
+      --fold:rgba(236,230,216,.16);
+      --crane-shadow:rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#13152a; --bg-2:#191c34; --ink:#ece6d8; --ink-soft:#a4a6c2;
+    --line:#2a2e50; --accent:#ee5a2b; --accent-ink:#12142a;
+    --f1:#3b4069; --f2:#31365b; --f3:#282c4d; --f4:#1f2340; --f5:#191c37;
+    --fold:rgba(236,230,216,.16); --crane-shadow:rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:inherit;margin:0;padding:0}
+  html{scroll-padding-top:calc(74px + env(safe-area-inset-top,0px));-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding-left:var(--pad);padding-right:var(--pad)}
+
+  /* ---------- Nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:20;
+    padding-top:env(safe-area-inset-top,0px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter:saturate(140%) blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:"Sora",sans-serif;font-weight:800;letter-spacing:-.02em;font-size:20px}
+  .brand svg{width:26px;height:26px;display:block}
+  .nav-links{display:flex;align-items:center;gap:28px}
+  .nav-links a{color:var(--ink-soft);font-size:15px;font-weight:500;transition:color .18s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-git{display:inline-flex;align-items:center;gap:7px;color:var(--ink)!important;font-weight:600}
+  .nav-git svg{width:18px;height:18px}
+  @media (max-width:720px){ .nav-hide{display:none} }
+
+  /* ---------- Hero ---------- */
+  .hero{position:relative;padding-top:clamp(48px,7vw,88px);padding-bottom:clamp(56px,8vw,104px)}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,56px);align-items:center}
+  .kicker{color:var(--ink-soft);font-size:14.5px;font-weight:500;margin-bottom:20px}
+  h1.mark{
+    font-family:"Sora",sans-serif;font-weight:800;
+    font-size:clamp(56px,10vw,104px);line-height:.94;letter-spacing:-.045em;
+    margin-bottom:14px;
+  }
+  .tagline{font-family:"Sora",sans-serif;font-weight:600;font-size:clamp(19px,2.6vw,26px);letter-spacing:-.02em;margin-bottom:20px}
+  .lead{font-size:clamp(15.5px,1.6vw,17.5px);color:var(--ink-soft);max-width:46ch;margin-bottom:30px}
+  .lead b{color:var(--ink);font-weight:600}
+
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:26px}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:"Sora",sans-serif;font-weight:600;font-size:15.5px;
+    padding:13px 22px;border-radius:11px;cursor:pointer;transition:transform .16s, box-shadow .2s, background .2s, border-color .2s;
+    border:1px solid transparent;
+  }
+  .btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 22px -8px var(--accent)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px -10px var(--accent)}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--ink-soft);transform:translateY(-2px)}
+  .btn svg{width:18px;height:18px}
+
+  .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .tag{font-size:13px;color:var(--ink-soft);border:1px solid var(--line);border-radius:999px;padding:5px 13px;font-weight:500}
+
+  /* faint fold texture behind hero */
+  .hero::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:
+      linear-gradient(115deg, transparent 49.85%, var(--line) 50%, transparent 50.15%),
+      linear-gradient(58deg, transparent 49.9%, var(--line) 50%, transparent 50.1%);
+    background-size:100% 100%;
+    -webkit-mask-image:radial-gradient(circle at 72% 42%, #000, transparent 62%);
+            mask-image:radial-gradient(circle at 72% 42%, #000, transparent 62%);
+  }
+  .hero .hero-grid, .hero .kicker{position:relative;z-index:1}
+
+  /* crane */
+  .crane-wrap{position:relative;display:flex;justify-content:center;align-items:center}
+  .crane{width:min(100%,480px);height:auto;overflow:visible;filter:drop-shadow(0 26px 40px var(--crane-shadow))}
+  .facet{stroke:var(--fold);stroke-width:1;stroke-linejoin:round}
+  .f1{fill:var(--f1)} .f2{fill:var(--f2)} .f3{fill:var(--f3)} .f4{fill:var(--f4)} .f5{fill:var(--f5)}
+  .fa{fill:var(--accent);stroke:var(--fold)}
+  .creases{fill:none;stroke:var(--fold);stroke-width:1.1;stroke-linecap:round;opacity:.75}
+
+  /* ---------- Section frame ---------- */
+  .band{border-top:1px solid var(--line)}
+  .band-in{padding-top:clamp(56px,7vw,92px);padding-bottom:clamp(56px,7vw,92px)}
+  h2{font-family:"Sora",sans-serif;font-weight:700;font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;line-height:1.05}
+  .band-lead{color:var(--ink-soft);font-size:16.5px;max-width:52ch;margin-top:14px}
+
+  /* ---------- Features ---------- */
+  .feat-head{display:flex;flex-direction:column;gap:0;margin-bottom:clamp(30px,4vw,48px)}
+  .feats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .feat{background:var(--bg);padding:clamp(24px,3vw,34px)}
+  .feat-glyph{width:40px;height:40px;margin-bottom:18px}
+  .feat h3{font-family:"Sora",sans-serif;font-weight:600;font-size:19px;letter-spacing:-.01em;margin-bottom:9px}
+  .feat p{color:var(--ink-soft);font-size:15px;max-width:40ch}
+  @media (max-width:720px){ .feats{grid-template-columns:1fr} }
+
+  /* ---------- Config ---------- */
+  .cfg-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(28px,4vw,56px);align-items:center}
+  .code{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    box-shadow:0 20px 50px -30px var(--crane-shadow);
+  }
+  .code-top{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .dot{width:11px;height:11px;border-radius:50%;background:var(--line)}
+  .code-name{margin-left:8px;font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink-soft)}
+  pre{margin:0;padding:18px 20px;overflow-x:auto;font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.72;color:var(--ink)}
+  .c-key{color:var(--accent)}
+  .c-com{color:var(--ink-soft);font-style:italic}
+  .c-bool{font-weight:500}
+  @media (max-width:800px){ .cfg-grid{grid-template-columns:1fr} }
+
+  /* ---------- Download ---------- */
+  .dl{display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px}
+  .dl h2{max-width:16ch}
+  .dl p{color:var(--ink-soft);max-width:48ch}
+  .dl-note{font-size:13.5px}
+  .dl-note a{color:var(--accent);font-weight:600}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--line);background:var(--bg-2)}
+  .foot-in{padding-top:44px;padding-bottom:calc(44px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:flex-start}
+  .foot-brand{display:flex;flex-direction:column;gap:12px;max-width:38ch}
+  .foot-brand .brand{font-size:18px}
+  .foot-dis{color:var(--ink-soft);font-size:13px}
+  .foot-cols{display:flex;gap:56px;flex-wrap:wrap}
+  .foot-col h4{font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:12px;font-family:"Sora",sans-serif}
+  .foot-col a{display:block;color:var(--ink);font-size:14.5px;margin-bottom:9px;transition:color .16s}
+  .foot-col a:hover{color:var(--accent)}
+  .copy{border-top:1px solid var(--line);color:var(--ink-soft);font-size:13px;padding:18px 0}
+
+  @media (max-width:860px){ .hero-grid{grid-template-columns:1fr} .crane-wrap{order:-1} .crane{width:min(78%,340px)} h1.mark{font-size:clamp(52px,16vw,84px)} }
+
+  /* ---------- Motion (one orchestrated load moment) ---------- */
+  @media (prefers-reduced-motion: no-preference){
+    .crane{animation:fold 1s cubic-bezier(.2,.7,.2,1) both}
+    .rise{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+    .rise.d1{animation-delay:.05s} .rise.d2{animation-delay:.13s} .rise.d3{animation-delay:.21s} .rise.d4{animation-delay:.29s}
+    @keyframes fold{from{opacity:0;transform:scale(.9) rotate(-5deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+    @keyframes rise{to{opacity:1;transform:none}}
+  }
+  :focus-visible{outline:2.5px solid var(--accent);outline-offset:3px;border-radius:6px}
+</style>
+</head>
+<body>
+
+<!-- reusable crane mark for nav/footer -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="mark" viewBox="0 0 48 48">
+    <path d="M24 6 L40 22 L24 27 Z" fill="var(--accent)"/>
+    <path d="M24 6 L8 22 L24 27 Z" fill="var(--ink)" opacity=".85"/>
+    <path d="M24 27 L33 40 L24 44 L15 40 Z" fill="var(--ink)" opacity=".55"/>
+  </symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a href="#top" class="brand"><svg><use href="#mark"/></svg>Origami</a>
+    <nav class="nav-links">
+      <a href="#why" class="nav-hide">Features</a>
+      <a href="#config" class="nav-hide">Config</a>
+      <a href="#" class="nav-hide">Docs</a>
+      <a href="#" class="nav-git" aria-label="Origami on GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.85 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.79.62-3.38-1.37-3.38-1.37-.46-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="kicker rise d1">High-performance Minecraft server software</p>
+      <div class="hero-grid">
+        <div>
+          <h1 class="mark rise d1">Origami</h1>
+          <p class="tagline rise d2">A folded, faster Paper fork.</p>
+          <p class="lead rise d3">Everything Paper does, creased tighter — async chunk work, leaner entity ticking, and the configuration Paper leaves out. <b>Swap the jar and keep every plugin you already run.</b></p>
+          <div class="cta-row rise d4">
+            <a href="#download" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>
+              Download for 1.21.4
+            </a>
+            <a href="#" class="btn btn-ghost">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.85 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.79.62-3.38-1.37-3.38-1.37-.46-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+          <div class="tags rise d4">
+            <span class="tag">Built on Paper</span>
+            <span class="tag">MIT licensed</span>
+            <span class="tag">Java 21</span>
+            <span class="tag">MC 1.21.x</span>
+          </div>
+        </div>
+
+        <div class="crane-wrap">
+          <svg class="crane" viewBox="0 0 480 380" role="img" aria-label="A folded paper crane">
+            <!-- tail -->
+            <polygon class="facet f4" points="290,95 405,100 285,150"/>
+            <polygon class="facet f5" points="405,100 285,150 355,150"/>
+            <!-- top bridge between neck & tail -->
+            <polygon class="facet f1" points="200,95 245,60 290,95"/>
+            <!-- wings -->
+            <polygon class="facet f2" points="245,60 120,175 245,235"/>
+            <polygon class="facet f1" points="245,60 370,175 245,235"/>
+            <polygon class="facet f4" points="120,175 245,235 160,215"/>
+            <polygon class="facet f3" points="370,175 245,235 330,215"/>
+            <!-- body -->
+            <polygon class="facet f4" points="160,215 245,235 245,320"/>
+            <polygon class="facet f3" points="330,215 245,235 245,320"/>
+            <!-- neck -->
+            <polygon class="facet f3" points="200,95 95,95 195,150"/>
+            <!-- head (red-crowned, the one bold spark) -->
+            <polygon class="fa" points="95,95 66,120 110,114"/>
+            <!-- crease overlay -->
+            <path class="creases" d="M245,60 L245,320 M245,60 L120,175 M245,60 L370,175 M120,175 L245,235 M370,175 L245,235 M200,95 L95,95 M290,95 L405,100"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section class="band" id="why">
+    <div class="wrap band-in">
+      <div class="feat-head">
+        <h2>Paper, tuned tighter.</h2>
+        <p class="band-lead">Origami keeps the whole Paper API and every optimisation you rely on, then adds the patches and knobs that squeeze more out of a busy server.</p>
+      </div>
+      <div class="feats">
+        <div class="feat">
+          <svg class="feat-glyph" viewBox="0 0 40 40" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3 6 22h11l-1 15 18-19H23z"/></svg>
+          <h3>Faster where it counts</h3>
+          <p>Async chunk generation and I/O, distance-aware entity ticking, and batched hopper transfers cut MSPT when your server is under real load.</p>
+        </div>
+        <div class="feat">
+          <svg class="feat-glyph" viewBox="0 0 40 40" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h24M8 20h24M8 34h24"/><circle cx="15" cy="6" r="3.4" fill="var(--bg)"/><circle cx="27" cy="20" r="3.4" fill="var(--bg)"/><circle cx="18" cy="34" r="3.4" fill="var(--bg)"/></svg>
+          <h3>More to configure</h3>
+          <p>Per-world rules and toggles Paper never exposes — spawning, weather, mob behaviour — editable live, no restart required.</p>
+        </div>
+        <div class="feat">
+          <svg class="feat-glyph" viewBox="0 0 40 40" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12 7 20l8 8M25 12l8 8-8 8"/></svg>
+          <h3>Built for plugin devs</h3>
+          <p>Extra events and a cleaner item, enchant and scheduler API sit on top of the full Paper API — no relearning, just more to reach for.</p>
+        </div>
+        <div class="feat">
+          <svg class="feat-glyph" viewBox="0 0 40 40" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4 6 11v9c0 8 6 13 14 16 8-3 14-8 14-16v-9z"/><path d="m14 20 4 4 8-9"/></svg>
+          <h3>Drop-in compatible</h3>
+          <p>Same Paper API, same plugin ecosystem. Point your start script at the Origami jar and everything you already have keeps working.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONFIG -->
+  <section class="band" id="config">
+    <div class="wrap band-in">
+      <div class="cfg-grid">
+        <div>
+          <h2>Knobs Paper<br>doesn't give you.</h2>
+          <p class="band-lead">A single <code style="font-family:'IBM Plex Mono',monospace;font-size:.92em;color:var(--accent)">origami.yml</code> collects the extra tuning in one place, with sane defaults so an untouched server just runs.</p>
+        </div>
+        <div class="code" aria-hidden="true">
+          <div class="code-top">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="code-name">origami.yml</span>
+          </div>
+<pre><span class="c-com"># tuning Paper leaves on the table</span>
+world-defaults:
+  <span class="c-key">entity-tick-distance</span>: 40        <span class="c-com"># tick mobs only near players</span>
+  <span class="c-key">merge-items-aggressively</span>: <span class="c-bool">true</span>
+  <span class="c-key">redstone-update-cache</span>: <span class="c-bool">true</span>
+  hopper:
+    <span class="c-key">batch-transfers</span>: <span class="c-bool">true</span>       <span class="c-com"># fewer partial moves/tick</span>
+
+chunks:
+  <span class="c-key">async-generation</span>: <span class="c-bool">true</span>
+
+<span class="c-key">reload-without-restart</span>: <span class="c-bool">true</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section class="band" id="download">
+    <div class="wrap band-in">
+      <div class="dl">
+        <h2>Fold it into your server.</h2>
+        <p>Grab the latest build, drop it in, and start. Origami reads your existing Paper and Spigot configs untouched.</p>
+        <a href="#" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>
+          Download Origami 1.21.4
+        </a>
+        <p class="dl-note">Also building for 1.21.1 and 1.20.6 — <a href="#">see all builds</a> · <a href="#">changelog</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <div class="foot-brand">
+      <a href="#top" class="brand"><svg><use href="#mark"/></svg>Origami</a>
+      <p class="foot-dis">An independent, community fork of Paper. Not affiliated with or endorsed by the PaperMC project or Mojang Studios.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>Project</h4>
+        <a href="#download">Download</a>
+        <a href="#">Changelog</a>
+        <a href="#">Docs</a>
+      </div>
+      <div class="foot-col">
+        <h4>Develop</h4>
+        <a href="#">GitHub</a>
+        <a href="#">API reference</a>
+        <a href="#">Contributing</a>
+      </div>
+      <div class="foot-col">
+        <h4>Community</h4>
+        <a href="#">Discord</a>
+        <a href="#">Issues</a>
+        <a href="#">Downloads mirror</a>
+      </div>
+    </div>
+  </div>
+  <div class="wrap copy">© 2026 Origami · MIT licensed · Made for server admins who count milliseconds.</div>
+</footer>
+
+</body>
+</html>

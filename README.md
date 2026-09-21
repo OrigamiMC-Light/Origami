@@ -1,101 +1,75 @@
-# Origami
+# 🕊️ Origami
 
-A folded, faster fork of [Paper](https://github.com/PaperMC/Paper). Everything Paper
-does, with extra optimisations, more configuration, and a wider plugin API — while
-staying drop-in compatible with the Paper plugin ecosystem.
+### Fold the code. Shape the server.
 
-Built with [paperweight](https://github.com/PaperMC/paperweight) 2.0. You edit Paper
-and Minecraft source directly, then turn your edits into `.patch` files that are
-re-applied on top of upstream every build.
+<p align="center">
+  <strong>A modern Paper fork built for performance, flexibility, and developers.</strong>
+</p>
 
-## Requirements
+<p align="center">
+  ⚡ Performance • 🧩 Developer API • 🚀 Innovation • 🔌 Compatibility
+</p>
 
-- JDK 21+ (the toolchain provisions the exact JDK the build needs automatically)
-- Git, configured with a name + email
-- ~8 GB free disk and RAM for the first patch/decompile
+---
 
-## First-time setup
+## 📖 About
 
-1. Configure Git if you haven't:
-   ```
-   git config --global user.name  "Your Name"
-   git config --global user.email "you@example.com"
-   ```
-2. Apply upstream + Origami patches (downloads and decompiles Paper — slow the first time):
-   ```
-   ./gradlew applyAllPatches
-   ```
-   This generates the working trees: `paper-api/`, `paper-server/`, `origami-api/`,
-   `origami-server/`.
-3. Open the project in IntelliJ IDEA (import the Gradle project).
+**Origami** is a Paper-based Minecraft server software fork targeting **Minecraft 26.2**.
 
-## Making changes
+Our mission is to provide a powerful, extensible, and developer-friendly alternative to traditional Minecraft server software.
 
-You have three places to add things, in order of preference:
+Origami focuses on improving server performance, expanding developer capabilities, introducing new features, and maintaining compatibility with the Paper plugin ecosystem.
 
-1. **Plain source (no patch needed).** Add classes under
-   `origami-api/src/main/java` or `origami-server/src/main/java`
-   (e.g. `dev.origami.*`). Best for anything that doesn't have to modify existing code.
-2. **Paper patches.** Edit files inside the generated `paper-api/` or `paper-server/`
-   trees, then run `rebuildAllPatches` to capture them under
-   `origami-api/paper-patches` / `origami-server/paper-patches`.
-3. **Minecraft patches.** Edit decompiled NMS files in `paper-server/`, then rebuild —
-   they land in `origami-server/minecraft-patches`.
+> 🕊️ Fold the code. Shape the server.
 
-Regenerate patch files after any edit to the generated trees:
-```
-./gradlew rebuildAllPatches
-```
-Commit the `.patch` files (not the generated `paper-*` trees — they're gitignored).
+---
 
-## Building a runnable server jar
+## 🎯 Goals
 
-```
-./gradlew createMojmapPaperclipJar
-```
-The jar is written to `origami-server/build/libs/`. Run it like any server:
-```
-java -Xms4G -Xmx4G -jar origami-paperclip-*-mojmap.jar nogui
-```
-(Accept the EULA in `eula.txt` on first run.)
+- ⚡ **Performance** — Improve server efficiency and optimize the Minecraft experience.
+- 🧩 **Developer API** — Build a flexible and powerful API for developers.
+- 🚀 **New Features** — Introduce innovative features and improvements.
+- 🔌 **Plugin Compatibility** — Support the Paper plugin ecosystem.
+- 🌐 **Alternative to Paper** — Offer a different direction for Minecraft server software.
 
-## Targeting a specific Minecraft version
+---
 
-This repo tracks the Paper commit pinned in `gradle.properties`:
+## ✨ Features
 
-- `paperRef`    — the upstream Paper commit to build on
-- `mcVersion` / `apiVersion` — the Minecraft/API version strings
-- `channel`     — release channel used in the version name
+> 🚧 Origami is under active development.
 
-To move to another version, set `paperRef` to a Paper commit for that version and
-match `mcVersion`/`apiVersion`. Use the Paper repository's history/tags as the source
-of truth, and keep the `paperweight.patcher` version in `build.gradle.kts` and the
-Java toolchain aligned with what that Paper version uses. Note that older releases
-(e.g. 1.21.4) predate this paperweight 2.0 layout and need the matching template era.
+- [ ] Performance optimizations
+- [ ] Extended developer API
+- [ ] New server-side features
+- [ ] Paper plugin compatibility
+- [ ] Improved server extensibility
+- [ ] Developer-focused tooling
 
-## CI / releases
+Features are subject to change as development progresses.
 
-- **`.github/workflows/build.yml`** — every push applies patches, builds, and uploads
-  the jar as a workflow artifact.
-- **`.github/workflows/release.yml`** — pushing a tag like `v1.0.0` builds the jar and
-  attaches it to a GitHub Release. Point your website's download button at that release
-  asset.
+---
 
-If your Paper version uses a different jar task, change `createMojmapPaperclipJar` in
-both workflows accordingly.
+## 🏗️ Built On
 
-## Configuration
+| Component | Details |
+|-----------|---------|
+| Minecraft | 26.2 |
+| Foundation | Paper |
+| Language | Java |
+| Type | Minecraft Server Software Fork |
 
-Extra tuning lives in `origami.yml` (add the config loader in `origami-server`).
-Keep sane defaults so an untouched server behaves exactly like Paper.
+---
 
-## Naming
+## 📦 Building
 
-`group` in `gradle.properties` is `dev.origami` and source packages are `dev.origami.*`.
-Change both if you want a different namespace.
+### Requirements
 
-## Licensing
+- Java Development Kit (JDK) compatible with Minecraft 26.2
+- Git
+- Internet connection
 
-Origami is a Paper fork and inherits Paper's licensing. The API portions follow
-Paper-API's MIT license; the server portions are **GPL-3.0** (inherited from
-CraftBukkit/Spigot/Paper). Do not relicense the server under a permissive license.
+### Clone the repository
+
+```bash
+git clone https://github.com/YOUR_ORGANIZATION/Origami.git
+cd Origami

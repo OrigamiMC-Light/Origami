@@ -71,5 +71,5 @@ Features are subject to change as development progresses.
 ### Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_ORGANIZATION/Origami.git
+git clone https://github.com/OrigamiMC-Light/Origami.git
 cd Origami
